@@ -81,6 +81,7 @@ def main():
     with open(log_file_path, "w") as log_file:
         def log_and_print(message):
             log_file.write(message + "\n")
+            log_file.flush()  # Ensure the message is written to the file immediately
             print(message)
 
         # Debugging: Print folder paths
@@ -181,6 +182,9 @@ def main():
                     state["combined_answers"] = ""
                     state["grouped_answers"] = [[] for _ in range(8)]
                     save_state(state, state_file)
+
+        # Ensure the log file is properly closed before uploading
+        log_file.close()
 
         # Upload the log file to Dropbox
         upload_file_to_dropbox(log_file_path, dropbox_folder, refresh_token, client_id, client_secret)
