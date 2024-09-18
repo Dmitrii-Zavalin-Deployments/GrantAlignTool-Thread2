@@ -161,12 +161,11 @@ def main():
     save_progress(progress_file, progress_data)
 
     # Rename log and result files upon completion
-    if progress_data["completed"]:
-        new_log_file_name = f"log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        new_results_file_name = f"result_{progress_data['project_counter']}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        os.rename(log_file_path, os.path.join(pdf_folder, new_log_file_name))
-        if os.path.exists(results_file_path):
-            os.rename(results_file_path, os.path.join(pdf_folder, new_results_file_name))
+    new_log_file_name = f"log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    new_results_file_name = f"result_{progress_data['project_counter']}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    os.rename(log_file_path, os.path.join(pdf_folder, new_log_file_name))
+    if os.path.exists(results_file_path):
+        os.rename(results_file_path, os.path.join(pdf_folder, new_results_file_name))
 
 if __name__ == "__main__":
     main()
