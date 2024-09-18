@@ -106,8 +106,11 @@ def main():
             file_list_path = 'file_list.txt'
             download_pdfs_from_dropbox(os.path.join(dropbox_folder, 'Projects'), projects_folder, refresh_token, client_id, client_secret, log_file, file_list_path)
 
+        # Process each project file
+        project_counter = 1
+        log_file.write("Starting to process project files...\n")
         for project_filename in os.listdir(projects_folder):
-            if project_filename.endswith('.pdf') and progress_data["project_counter"] > 1:
+            if project_filename.endswith('.pdf'):
                 project_file_path = os.path.join(projects_folder, project_filename)
                 project_text = extract_text_from_pdf(project_file_path)
 
