@@ -79,36 +79,39 @@ def main():
 
     # Open the log file
     with open(log_file_path, "w") as log_file:
+        def log_and_print(message):
+            log_file.write(message + "\n")
+            print(message)
+
         # Debugging: Print folder paths
-        log_file.write(f"Dropbox folder: {dropbox_folder}\n")
-        log_file.write(f"Local PDF folder: {pdf_folder}\n")
-        log_file.write(f"Projects folder: {projects_folder}\n")
+        log_and_print(f"Dropbox folder: {dropbox_folder}")
+        log_and_print(f"Local PDF folder: {pdf_folder}")
+        log_and_print(f"Projects folder: {projects_folder}")
 
         if state["step"] == "start":
-            log_file.write("Step: start\n")
+            log_and_print("Step: start")
             # Download PDFs from Dropbox
             download_pdfs_from_dropbox(dropbox_folder, pdf_folder, refresh_token, client_id, client_secret, log_file)
             state["step"] = "extract_text"
             save_state(state, state_file)
 
         if state["step"] == "extract_text":
-            log_file.write("Step: extract_text\n")
+            log_and_print("Step: extract_text")
             # Extract text from PDFs
             for filename in os.listdir(pdf_folder):
                 if filename.endswith('.pdf'):
                     file_path = os.path.join(pdf_folder, filename)
                     data += extract_text_from_pdf(file_path)
                     # Print the current file number being processed
-                    log_file.write(f"Processing PDF {state['pdf_counter']}\n")
-                    print(f"Processing PDF {state['pdf_counter']}")
+                    log_and_print(f"Processing PDF {state['pdf_counter']}")
                     state["pdf_counter"] += 1
-            log_file.write("Data from Dropbox:\n")
-            log_file.write(data + "\n")
+            log_and_print("Data from Dropbox:")
+            log_and_print(data)
             state["step"] = "download_projects"
             save_state(state, state_file)
 
         if state["step"] == "download_projects":
-            log_file.write("Step: download_projects\n")
+            log_and_print("Step: download_projects")
             # Download project files from Dropbox
             file_list_path = 'file_list.txt'  # Path to the file list in the same directory as main.py
             download_pdfs_from_dropbox(os.path.join(dropbox_folder, 'Projects'), projects_folder, refresh_token, client_id, client_secret, log_file, file_list_path)
@@ -116,7 +119,7 @@ def main():
             save_state(state, state_file)
 
         if state["step"] == "process_projects":
-            log_file.write("Step: process_projects\n")
+            log_and_print("Step: process_projects")
             # Process each project file
             for project_filename in os.listdir(projects_folder):
                 if project_filename.endswith('.pdf'):
@@ -128,11 +131,11 @@ def main():
                     all_answers = state["combined_answers"]
 
                     for i, question in enumerate(questions, state["question_counter"]):
-                        log_file.write(f"Built question {i} for {project_filename}: {question}\n")
+                        log_and_print(f"Built question {i} for {project_filename}: {question}")
 
                         # Run GPT-4 model
                         answer = run_gpt4all(question, log_file)
-                        log_file.write(f"Answer for question {i} for {project_filename}: {answer}\n")
+                        log_and_print(f"Answer for question {i} for {project_filename}: {answer}")
                         all_answers += " " + answer
 
                         # Group answers by question type
@@ -140,8 +143,7 @@ def main():
                         state["grouped_answers"][question_type_index].append(answer)
 
                         # Print the current question number being processed
-                        log_file.write(f"Processing question {i} for project {state['project_counter']}\n")
-                        print(f"Processing question {i} for project {state['project_counter']}")
+                        log_and_print(f"Processing question {i} for project {state['project_counter']}")
 
                         # Summarize if there are more than 10 sentences
                         if (i % 10 == 0):
@@ -173,8 +175,7 @@ def main():
                     upload_file_to_dropbox(results_file_path, dropbox_folder, refresh_token, client_id, client_secret)
 
                     # Print the completion of processing for the current project file
-                    log_file.write(f"Completed processing for project {state['project_counter']}\n")
-                    print(f"Completed processing for project {state['project_counter']}")
+                    log_and_print(f"Completed processing for project {state['project_counter']}")
                     state["project_counter"] += 1
                     state["question_counter"] = 1
                     state["combined_answers"] = ""
