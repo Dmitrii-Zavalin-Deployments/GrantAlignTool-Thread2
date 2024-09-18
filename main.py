@@ -1,6 +1,7 @@
 import os
 import datetime
 import requests
+import json
 from extract_text_from_pdf import extract_text_from_pdf
 from download_from_dropbox import download_pdfs_from_dropbox, upload_file_to_dropbox
 from gpt4all_functions import run_gpt4all
@@ -31,10 +32,21 @@ def summarize_text(text, max_sentences=10):
     summary = '. '.join(sentences[:max_sentences])
     return summary
 
+def save_state(state, state_file):
+    with open(state_file, 'w') as f:
+        json.dump(state, f)
+
+def load_state(state_file):
+    if os.path.exists(state_file):
+        with open(state_file, 'r') as f:
+            return json.load(f)
+    return None
+
 def main():
     pdf_folder = 'pdfs'
     dropbox_folder = '/GrantAlignTool'
     projects_folder = 'Projects'  # Local folder to store project files
+    state_file = 'state.json'
 
     # Fetch secrets from environment variables
     client_id = os.getenv('DROPBOX_APP_KEY')
@@ -53,6 +65,18 @@ def main():
     os.makedirs(pdf_folder, exist_ok=True)
     os.makedirs(projects_folder, exist_ok=True)
 
+    # Load previous state if exists
+    state = load_state(state_file)
+    if state is None:
+        state = {
+            "step": "start",
+            "pdf_counter": 1,
+            "project_counter": 1,
+            "question_counter": 1,
+            "combined_answers": "",
+            "grouped_answers": [[] for _ in range(8)]
+        }
+
     # Open the log file
     with open(log_file_path, "w") as log_file:
         # Debugging: Print folder paths
@@ -60,89 +84,102 @@ def main():
         log_file.write(f"Local PDF folder: {pdf_folder}\n")
         log_file.write(f"Projects folder: {projects_folder}\n")
 
-        # Download PDFs from Dropbox
-        download_pdfs_from_dropbox(dropbox_folder, pdf_folder, refresh_token, client_id, client_secret, log_file)
+        if state["step"] == "start":
+            # Download PDFs from Dropbox
+            download_pdfs_from_dropbox(dropbox_folder, pdf_folder, refresh_token, client_id, client_secret, log_file)
+            state["step"] = "extract_text"
+            save_state(state, state_file)
 
-        # Extract text from PDFs
-        pdf_counter = 1
-        for filename in os.listdir(pdf_folder):
-            if filename.endswith('.pdf'):
-                file_path = os.path.join(pdf_folder, filename)
-                data += extract_text_from_pdf(file_path)
-                # Print the current file number being processed
-                print(f"Processing PDF {pdf_counter}")
-                pdf_counter += 1
+        if state["step"] == "extract_text":
+            # Extract text from PDFs
+            for filename in os.listdir(pdf_folder):
+                if filename.endswith('.pdf'):
+                    file_path = os.path.join(pdf_folder, filename)
+                    data += extract_text_from_pdf(file_path)
+                    # Print the current file number being processed
+                    print(f"Processing PDF {state['pdf_counter']}")
+                    state["pdf_counter"] += 1
+            log_file.write("Data from Dropbox:\n")
+            log_file.write(data + "\n")
+            state["step"] = "download_projects"
+            save_state(state, state_file)
 
-        log_file.write("Data from Dropbox:\n")
-        log_file.write(data + "\n")
+        if state["step"] == "download_projects":
+            # Download project files from Dropbox
+            file_list_path = 'file_list.txt'  # Path to the file list in the same directory as main.py
+            download_pdfs_from_dropbox(os.path.join(dropbox_folder, 'Projects'), projects_folder, refresh_token, client_id, client_secret, log_file, file_list_path)
+            state["step"] = "process_projects"
+            save_state(state, state_file)
 
-        # Download project files from Dropbox
-        file_list_path = 'file_list.txt'  # Path to the file list in the same directory as main.py
-        download_pdfs_from_dropbox(os.path.join(dropbox_folder, 'Projects'), projects_folder, refresh_token, client_id, client_secret, log_file, file_list_path)
+        if state["step"] == "process_projects":
+            # Process each project file
+            for project_filename in os.listdir(projects_folder):
+                if project_filename.endswith('.pdf'):
+                    project_file_path = os.path.join(projects_folder, project_filename)
+                    project_text = extract_text_from_pdf(project_file_path)
 
-        # Process each project file
-        project_counter = 1
-        for project_filename in os.listdir(projects_folder):
-            if project_filename.endswith('.pdf'):
-                project_file_path = os.path.join(projects_folder, project_filename)
-                project_text = extract_text_from_pdf(project_file_path)
+                    # Build the questions
+                    questions = build_questions(project_text, data)
+                    all_answers = state["combined_answers"]
 
-                # Build the questions
-                questions = build_questions(project_text, data)
-                all_answers = []
-                combined_answers = ""
+                    for i, question in enumerate(questions, state["question_counter"]):
+                        log_file.write(f"Built question {i} for {project_filename}: {question}\n")
 
-                # Initialize lists for each question type
-                grouped_answers = [[] for _ in range(8)]
+                        # Run GPT-4 model
+                        answer = run_gpt4all(question, log_file)
+                        log_file.write(f"Answer for question {i} for {project_filename}: {answer}\n")
+                        all_answers += " " + answer
 
-                for i, question in enumerate(questions, 1):
-                    log_file.write(f"Built question {i} for {project_filename}: {question}\n")
+                        # Group answers by question type
+                        question_type_index = (i - 1) % 8  # 8 is the number of question options from question_builder.py
+                        state["grouped_answers"][question_type_index].append(answer)
 
-                    # Run GPT-4 model
-                    answer = run_gpt4all(question, log_file)
-                    log_file.write(f"Answer for question {i} for {project_filename}: {answer}\n")
-                    all_answers.append(answer)
-                    combined_answers += " " + answer
+                        # Print the current question number being processed
+                        print(f"Processing question {i} for project {state['project_counter']}")
 
-                    # Group answers by question type
-                    question_type_index = (i - 1) % 8  # 8 is the number of question options from question_builder.py
-                    grouped_answers[question_type_index].append(answer)
+                        # Summarize if there are more than 10 sentences
+                        if (i % 10 == 0):
+                            all_answers = summarize_text(all_answers)
 
-                    # Print the current question number being processed
-                    print(f"Processing question {i} for project {project_counter}")
+                        state["question_counter"] = i + 1
+                        save_state(state, state_file)
 
-                    # Summarize if there are more than 10 sentences
-                    if (i % 10 == 0):
-                        combined_answers = summarize_text(combined_answers)
+                    # Final summarization
+                    summary = summarize_text(all_answers)
 
-                # Final summarization
-                summary = summarize_text(combined_answers)
+                    # Remove the extension from project_filename
+                    project_name = os.path.splitext(project_filename)[0]
 
-                # Remove the extension from project_filename
-                project_name = os.path.splitext(project_filename)[0]
+                    # Create results file with a unique name
+                    results_file_name = f"result_{project_name}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                    results_file_path = os.path.join(pdf_folder, results_file_name)
+                    with open(results_file_path, "w") as results_file:
+                        results_file.write(f"Log file: {log_file_name}\n\n")
+                        results_file.write("Summary:\n")
+                        results_file.write(summary + "\n\n")
+                        results_file.write("Grouped Answers:\n")
+                        for j, answers in enumerate(state["grouped_answers"], 1):
+                            results_file.write(f"Question Type {j}:\n")
+                            grouped_summary = summarize_text(' '.join(answers))
+                            results_file.write(f"{grouped_summary}\n\n")
 
-                # Create results file with a unique name
-                results_file_name = f"result_{project_name}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-                results_file_path = os.path.join(pdf_folder, results_file_name)
-                with open(results_file_path, "w") as results_file:
-                    results_file.write(f"Log file: {log_file_name}\n\n")
-                    results_file.write("Summary:\n")
-                    results_file.write(summary + "\n\n")
-                    results_file.write("Grouped Answers:\n")
-                    for j, answers in enumerate(grouped_answers, 1):
-                        results_file.write(f"Question Type {j}:\n")
-                        grouped_summary = summarize_text(' '.join(answers))
-                        results_file.write(f"{grouped_summary}\n\n")
+                    # Upload the results file to Dropbox
+                    upload_file_to_dropbox(results_file_path, dropbox_folder, refresh_token, client_id, client_secret)
 
-                # Upload the results file to Dropbox
-                upload_file_to_dropbox(results_file_path, dropbox_folder, refresh_token, client_id, client_secret)
+                    # Print the completion of processing for the current project file
+                    print(f"Completed processing for project {state['project_counter']}")
+                    state["project_counter"] += 1
+                    state["question_counter"] = 1
+                    state["combined_answers"] = ""
+                    state["grouped_answers"] = [[] for _ in range(8)]
+                    save_state(state, state_file)
 
-                # Print the completion of processing for the current project file
-                print(f"Completed processing for project {project_counter}")
-                project_counter += 1
+        # Upload the log file to Dropbox
+        upload_file_to_dropbox(log_file_path, dropbox_folder, refresh_token, client_id, client_secret)
 
-    # Upload the log file to Dropbox
-    upload_file_to_dropbox(log_file_path, dropbox_folder, refresh_token, client_id, client_secret)
+        # Clean up state file after successful run
+        if os.path.exists(state_file):
+            os.remove(state_file)
 
 if __name__ == "__main__":
     main()
