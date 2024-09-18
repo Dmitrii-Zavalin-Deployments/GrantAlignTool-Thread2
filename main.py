@@ -61,7 +61,7 @@ def main():
         log_file.write(f"Projects folder: {projects_folder}\n")
 
         # Download PDFs from Dropbox
-        download_pdfs_from_dropbox(dropbox_folder, pdf_folder, access_token, log_file)
+        download_pdfs_from_dropbox(dropbox_folder, pdf_folder, refresh_token, client_id, client_secret, log_file)
 
         # Extract text from PDFs
         pdf_counter = 1
@@ -78,7 +78,7 @@ def main():
 
         # Download project files from Dropbox
         file_list_path = 'file_list.txt'  # Path to the file list in the same directory as main.py
-        download_pdfs_from_dropbox(os.path.join(dropbox_folder, 'Projects'), projects_folder, access_token, log_file, file_list_path)
+        download_pdfs_from_dropbox(os.path.join(dropbox_folder, 'Projects'), projects_folder, refresh_token, client_id, client_secret, log_file, file_list_path)
 
         # Process each project file
         project_counter = 1
@@ -135,14 +135,14 @@ def main():
                         results_file.write(f"{grouped_summary}\n\n")
 
                 # Upload the results file to Dropbox
-                upload_file_to_dropbox(results_file_path, dropbox_folder, access_token)
+                upload_file_to_dropbox(results_file_path, dropbox_folder, refresh_token, client_id, client_secret)
 
                 # Print the completion of processing for the current project file
                 print(f"Completed processing for project {project_counter}")
                 project_counter += 1
 
     # Upload the log file to Dropbox
-    upload_file_to_dropbox(log_file_path, dropbox_folder, access_token)
+    upload_file_to_dropbox(log_file_path, dropbox_folder, refresh_token, client_id, client_secret)
 
 if __name__ == "__main__":
     main()
