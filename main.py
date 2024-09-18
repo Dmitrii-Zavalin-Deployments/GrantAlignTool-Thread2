@@ -55,6 +55,10 @@ def main():
     access_token = refresh_access_token(refresh_token, client_id, client_secret)
     data = ""
 
+    # Ensure the local folders exist
+    os.makedirs(pdf_folder, exist_ok=True)
+    os.makedirs(projects_folder, exist_ok=True)
+
     # Load progress data
     progress_data = load_progress(progress_file)
     if progress_data is None:
