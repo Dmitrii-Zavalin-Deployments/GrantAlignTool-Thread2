@@ -122,7 +122,8 @@ def main():
         if state["step"] == "process_projects":
             log_and_print("Step: process_projects")
             # Process each project file
-            for project_filename in os.listdir(projects_folder):
+            project_files = os.listdir(projects_folder)
+            for project_filename in project_files[state["project_counter"]-1:]:
                 if project_filename.endswith('.pdf'):
                     project_file_path = os.path.join(projects_folder, project_filename)
                     project_text = extract_text_from_pdf(project_file_path)
@@ -131,7 +132,7 @@ def main():
                     questions = build_questions(project_text, data)
                     all_answers = state["combined_answers"]
 
-                    for i, question in enumerate(questions, state["question_counter"]):
+                    for i, question in enumerate(questions[state["question_counter"]-1:], state["question_counter"]):
                         log_and_print(f"Built question {i} for {project_filename}: {question}")
 
                         # Run GPT-4 model
