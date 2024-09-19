@@ -69,7 +69,7 @@ def main():
         for filename in os.listdir(pdf_folder):
             if filename.endswith('.pdf'):
                 file_path = os.path.join(pdf_folder, filename)
-                data += extract_text_from_pdf(file_path)
+                data += extract_text_from_pdf(file_path) + " "  # Add a space between texts
                 # Print the current file number being processed
                 print(f"Processing PDF {pdf_counter}")
                 pdf_counter += 1
