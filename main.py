@@ -60,8 +60,9 @@ def main():
         log_file.write(f"Local PDF folder: {pdf_folder}\n")
         log_file.write(f"Projects folder: {projects_folder}\n")
 
-        # Download PDFs from Dropbox
-        download_pdfs_from_dropbox(dropbox_folder, pdf_folder, refresh_token, client_id, client_secret, log_file)
+        # Download PDFs from Dropbox (GrantAlignTool)
+        grant_pages_path = 'grant_pages.txt'  # Path to the grant pages list in the same directory as main.py
+        download_pdfs_from_dropbox(dropbox_folder, pdf_folder, refresh_token, client_id, client_secret, log_file, grant_pages_path)
 
         # Extract text from PDFs
         pdf_counter = 1
