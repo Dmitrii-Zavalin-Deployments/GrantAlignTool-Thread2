@@ -40,13 +40,14 @@ def main():
     client_id = os.getenv('DROPBOX_APP_KEY')
     client_secret = os.getenv('DROPBOX_APP_SECRET')
     refresh_token = os.getenv('DROPBOX_REFRESH_TOKEN')
+    repo_name = os.getenv('REPO_NAME').split('/')[-1]  # Get the repository name
 
     # Refresh the access token
     access_token = refresh_access_token(refresh_token, client_id, client_secret)
     data = ""
 
     # Create a unique log file name
-    log_file_name = f"log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    log_file_name = f"log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_{repo_name}.txt"
     log_file_path = os.path.join(pdf_folder, log_file_name)
 
     # Ensure the local folders exist
@@ -123,7 +124,7 @@ def main():
                 project_name = os.path.splitext(project_filename)[0]
 
                 # Create results file with a unique name
-                results_file_name = f"result_{project_name}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                results_file_name = f"result_{project_name}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_{repo_name}.txt"
                 results_file_path = os.path.join(pdf_folder, results_file_name)
                 with open(results_file_path, "w") as results_file:
                     results_file.write(f"Log file: {log_file_name}\n\n")

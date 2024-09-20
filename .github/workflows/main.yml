@@ -26,9 +26,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Set repository name environment variable
+      run: echo "REPO_NAME=${{ github.repository }}" >> $GITHUB_ENV
+
     - name: Run main.py
       env:
         DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
         DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
+        REPO_NAME: ${{ github.repository }}
       run: python main.py
