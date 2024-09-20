@@ -48,14 +48,23 @@ read -p "Enter Dropbox App Secret (client_secret): " client_secret
 read -p "Enter Dropbox Refresh Token (refresh_token): " refresh_token
 print_separator
 
-# Ask the user to enter the number of runs or use default value 10
-read -p "Enter the number of runs (default is 10): " num_runs
-num_runs=${num_runs:-10}
+# Ask the user to enter the project name from the Projects folder
+read -p "Enter the name (without extension) of the project from the Projects folder: " project_name
+print_separator
+
+# Ask the user to enter the number of runs or use default value 15
+read -p "Enter the number of runs (default is 15): " num_runs
+num_runs=${num_runs:-15}
 print_separator
 
 # Directory containing the PDF files
 pdf_dir="pdfs"
 dropbox_folder="/GrantAlignTool"
+
+# Ensure the pdfs folder is clean
+echo "Cleaning up the folder $pdf_dir..."
+rm -rf "$pdf_dir"
+print_separator
 
 # Refresh the access token
 echo "Refreshing Dropbox access token..."
@@ -91,5 +100,10 @@ for ((i=0; i<num_runs; i++)); do
     start_index=$end_index
     print_separator
 done
+
+# Delete the pdfs folder
+echo "Deleting the folder $pdf_dir..."
+rm -rf "$pdf_dir"
+print_separator
 
 echo "All tasks completed successfully!"
