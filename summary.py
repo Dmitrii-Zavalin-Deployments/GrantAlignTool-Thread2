@@ -85,8 +85,12 @@ def main():
         with open(os.path.join(summary_folder, result_file), 'r') as file:
             text_to_summary += file.read() + " "
 
-    # Summarize the combined text
-    summary = run_gpt4all(text_to_summary)
+    # Create a log file
+    log_file_name = f"log_summary_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    log_file_path = os.path.join(summary_folder, log_file_name)
+    with open(log_file_path, 'w') as log_file:
+        # Summarize the combined text
+        summary = run_gpt4all(text_to_summary, log_file)
 
     # Read the content of file_list.txt
     with open(os.path.join(summary_folder, 'file_list.txt'), 'r') as file_list:
