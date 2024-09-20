@@ -137,6 +137,11 @@ for ((i=0; i<num_runs; i++)); do
     git push origin master
     cd ..
     print_separator
+
+    # Delete the local repository folder
+    echo "Deleting the local repository folder $repo_dir..."
+    rm -rf "$repo_dir"
+    print_separator
 done
 
 # Delete the pdfs folder
