@@ -55,6 +55,20 @@ print_separator
 # Ask the user to enter the number of runs or use default value 15
 read -p "Enter the number of runs (default is 15): " num_runs
 num_runs=${num_runs:-15}
+if [ $num_runs -gt 15 ]; then
+    echo "Error: The number of runs cannot exceed 15."
+    exit 1
+fi
+print_separator
+
+# Ask the user to enter the path to the SSH key file
+read -p "Enter the path to your SSH key file: " ssh_key_path
+print_separator
+
+# Add the SSH key to the SSH agent
+echo "Adding SSH key to the SSH agent..."
+eval "$(ssh-agent -s)"
+ssh-add "$ssh_key_path"
 print_separator
 
 # Directory containing the PDF files
@@ -98,6 +112,30 @@ for ((i=0; i<num_runs; i++)); do
     run_files=("${pdf_files[@]:start_index:end_index-start_index}")
     echo "Run $((i+1)) files: ${run_files[@]}"
     start_index=$end_index
+    print_separator
+
+    # Clone the appropriate repository
+    repo_url="git@github.com:Dmitrii-Zavalin-Deployments/GrantAlignTool-Thread$((i+1)).git"
+    repo_dir="GrantAlignTool-Thread$((i+1))"
+    echo "Cloning repository $repo_url..."
+    git clone "$repo_url" "$repo_dir"
+    print_separator
+
+    # Add files to grant_pages.txt and file_list.txt
+    echo "Updating grant_pages.txt and file_list.txt in $repo_dir..."
+    grant_pages_file="$repo_dir/grant_pages.txt"
+    file_list_file="$repo_dir/file_list.txt"
+    echo "${run_files[@]}" > "$grant_pages_file"
+    echo "$project_name" > "$file_list_file"
+    print_separator
+
+    # Push the changes to the repository
+    echo "Pushing changes to the repository $repo_url..."
+    cd "$repo_dir"
+    git add grant_pages.txt file_list.txt
+    git commit -m "Update grant_pages.txt and file_list.txt for run $((i+1))"
+    git push origin master
+    cd ..
     print_separator
 done
 
