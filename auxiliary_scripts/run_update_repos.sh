@@ -10,21 +10,22 @@ echo "Run the script from the auxiliary_scripts folder within the core directory
 print_separator
 
 # Get the absolute path of the GrantAlignTool directory
-grant_align_tool_path=$(realpath ../../GrantAlignTool)
+cd ../..
+grant_align_tool_path=$(pwd)
 
 # Copy the update_repos.sh script to the GrantAlignTool directory
 echo "Copying update_repos.sh to the GrantAlignTool directory..."
-cp update_repos.sh "$grant_align_tool_path/update_repos_temp.sh"
+cp GrantAlignTool/auxiliary_scripts/update_repos.sh .
 print_separator
 
 # Run the copied script from the GrantAlignTool directory
-echo "Running the update_repos_temp.sh script from the GrantAlignTool directory..."
-(cd "$grant_align_tool_path" && bash update_repos_temp.sh "$grant_align_tool_path")
+echo "Running the update_repos.sh script from the outside of GrantAlignTool directory..."
+./update_repos.sh
 print_separator
 
 # Clean up by removing the temporary script
 echo "Cleaning up the temporary script..."
-rm "$grant_align_tool_path/update_repos_temp.sh"
+rm update_repos.sh
 print_separator
 
 echo "All repositories have been updated."

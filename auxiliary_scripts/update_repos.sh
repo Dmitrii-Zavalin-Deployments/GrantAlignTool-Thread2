@@ -21,7 +21,7 @@ start=1
 end=15
 
 # Get the local repository path from the argument
-local_repo="$1"
+local_repo="GrantAlignTool"
 
 # Define your GitHub username
 github_username="Dmitrii-Zavalin-Deployments"
@@ -45,7 +45,7 @@ for i in $(seq $start $end); do
 
     # Change to the repository directory
     cd ${repo_name}
-
+    
     # Check if the repository is empty
     if [ -z "$(ls -A .)" ]; then
         echo "Repository ${repo_name} is empty. Creating initial commit..."
@@ -57,14 +57,24 @@ for i in $(seq $start $end); do
     else
         # Ensure we are on the master branch
         git checkout master
+
+        # Pull the latest changes from the remote repository
+        echo "Pulling latest changes from the remote repository..."
+        git pull origin master
     fi
 
-    # Copy the contents from the local repository to the cloned repository
+    # Delete all files and folders except .git
+    echo "Deleting all files and folders except .git..."
+    rm -rf *
+    rm -rf .github
+
+    # Copy the contents from the local repository to the cloned repository, excluding the .git directory and the repo_name directory
     echo "Copying files from ${local_repo} to ${repo_name}..."
-    cp -r ${local_repo}/* .
-    cp -r ${local_repo}/.github .
+    cp -r ../${local_repo}/* .
+    cp -r ../${local_repo}/.github .
 
     # Add, commit, and push the changes
+    echo "$(pwd)"
     echo "Adding files to ${repo_name}..."
     git add .
     echo "Committing changes in ${repo_name}..."
