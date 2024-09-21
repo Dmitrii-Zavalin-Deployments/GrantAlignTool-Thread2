@@ -1,6 +1,6 @@
 import re
 
-def split_into_chunks(text, max_chars=6000):
+def split_into_chunks(text, max_chars=5000):
     sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
     chunks = []
     current_chunk = ""

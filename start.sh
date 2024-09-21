@@ -128,7 +128,8 @@ for ((i=0; i<num_runs; i++)); do
         end_index=$((end_index + 1))
     fi
     run_files=("${pdf_files[@]:start_index:end_index-start_index}")
-    echo "Run $((i+1)) files: ${run_files[@]}"
+    run_files_no_ext=("${run_files[@]%.pdf}")  # Remove the .pdf extension
+    echo "Run $((i+1)) files: ${run_files_no_ext[@]}"
     start_index=$end_index
     print_separator
 
@@ -143,7 +144,7 @@ for ((i=0; i<num_runs; i++)); do
     echo "Updating grant_pages.txt and file_list.txt in $repo_dir..."
     grant_pages_file="$repo_dir/grant_pages.txt"
     file_list_file="$repo_dir/file_list.txt"
-    echo "${run_files[@]}" > "$grant_pages_file"
+    echo "${run_files_no_ext[@]}" > "$grant_pages_file"
     echo "$project_name" > "$file_list_file"
     print_separator
 
