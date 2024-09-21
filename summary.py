@@ -113,8 +113,8 @@ def main():
     with open(file_list_path, 'r') as file_list:
         file_list_content = file_list.read().strip()
 
-    # Create the final summary file
-    final_summary_file_name = f"{file_list_content}_project_grant_alignment_summary.txt"
+    # Create the final summary file with the number of result files in the name
+    final_summary_file_name = f"{file_list_content}_project_grant_alignment_summary_{len(result_files)}.txt"
     final_summary_file_path = os.path.join(summary_folder, final_summary_file_name)
     with open(final_summary_file_path, 'w') as final_summary_file:
         final_summary_file.write(f"Summarized {len(result_files)} result files\n\n")

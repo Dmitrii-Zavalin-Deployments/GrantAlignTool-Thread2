@@ -5,6 +5,20 @@ print_separator() {
     echo "----------------------------------------"
 }
 
+# Function to check and install required packages
+install_required_packages() {
+    packages=("curl" "jq")
+    for package in "${packages[@]}"; do
+        if ! command -v $package &> /dev/null; then
+            echo "Installing $package..."
+            sudo apt-get update
+            sudo apt-get install -y -f $package
+        else
+            echo "$package is already installed."
+        fi
+    done
+}
+
 # Function to refresh the access token
 refresh_access_token() {
     local refresh_token=$1
@@ -40,6 +54,10 @@ download_pdfs_from_dropbox() {
         fi
     done
 }
+
+# Check and install required packages
+install_required_packages
+print_separator
 
 # Ask the user to enter Dropbox credentials
 echo "Please enter your Dropbox credentials:"
