@@ -60,6 +60,9 @@ def upload_file_to_dropbox(local_file_path, dropbox_folder, access_token):
     if response.status_code != 200:
         raise Exception(f"Failed to upload {local_file_path} to Dropbox")
 
+def split_text_by_characters(text, max_chars=6000):
+    return [text[i:i + max_chars] for i in range(0, len(text), max_chars)]
+
 def main():
     dropbox_folder = '/GrantAlignTool'
     summary_folder = 'summary'
@@ -89,11 +92,25 @@ def main():
     log_file_name = f"log_summary_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     log_file_path = os.path.join(summary_folder, log_file_name)
     with open(log_file_path, 'w') as log_file:
-        # Summarize the combined text
-        summary = run_gpt4all(text_to_summary, log_file)
+        # Split the text into chunks of no more than 6000 characters each
+        chunks = split_text_by_characters(text_to_summary)
 
-    # Read the content of file_list.txt
-    with open(os.path.join(summary_folder, 'file_list.txt'), 'r') as file_list:
+        # Summarize each chunk to get no more than 250 tokens
+        chunk_summaries = []
+        for chunk in chunks:
+            chunk_summary = run_gpt4all(chunk, log_file)
+            chunk_summaries.append(chunk_summary)
+
+        # Combine all chunk summaries into one variable
+        final_summary = " ".join(chunk_summaries)
+
+    # Read the content of file_list.txt from the same directory as summary.py
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_list_path = os.path.join(script_dir, 'file_list.txt')
+    if not os.path.exists(file_list_path):
+        raise FileNotFoundError(f"{file_list_path} not found. Please ensure the file exists.")
+
+    with open(file_list_path, 'r') as file_list:
         file_list_content = file_list.read().strip()
 
     # Create the final summary file
@@ -102,7 +119,7 @@ def main():
     with open(final_summary_file_path, 'w') as final_summary_file:
         final_summary_file.write(f"Summarized {len(result_files)} result files\n\n")
         final_summary_file.write("Summary:\n")
-        final_summary_file.write(summary)
+        final_summary_file.write(final_summary)
 
     # Upload the final summary file to Dropbox
     upload_file_to_dropbox(final_summary_file_path, dropbox_folder, access_token)
