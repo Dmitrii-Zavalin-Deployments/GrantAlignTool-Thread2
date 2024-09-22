@@ -9,7 +9,7 @@ This tool aligns project descriptions with grant requirements using GPT-4All. It
     - **Grant Requirements**: Place PDF files with grant requirements in the Dropbox folder `/GrantAlignTool`.
 
 2. **Update Dropbox Access Token**:
-    - Generate a new Dropbox access token for the needed application from Dropbox Developers: Dropbox Developers: https://www.dropbox.com/developers/apps.
+    - Generate a new Dropbox access token for the needed application from Dropbox Developers: Dropbox Developers.
     - Update the Dropbox access token in GitHub Actions Secrets.
 
 3. **Prepare `file_list.txt` and `grant_pages.txt`**:
@@ -25,7 +25,7 @@ This tool aligns project descriptions with grant requirements using GPT-4All. It
     - Process one grant at a time. After running the script, delete or move the grant PDF files to avoid confusion for the next run.
 
 ## Multi-Run Option
-For multiple runs, clone this repository and use the `start.sh` script. Follow these steps:
+For multiple runs, start with the `start.sh` script. Follow these steps:
 
 1. **Clone the repository**:
     ```bash
@@ -40,8 +40,15 @@ For multiple runs, clone this repository and use the `start.sh` script. Follow t
 
 3. **Script Details**:
     - The script will prompt you to enter your Dropbox credentials, project name, number of runs, and the path to your SSH key file.
-    - It will refresh the Dropbox access token, download PDFs, and split them into the specified number of runs.
+    - Split PDFs into the specified number of runs.
     - For each run, it will clone a specific repository, update `grant_pages.txt` and `file_list.txt`, and push the changes.
+
+4. **Local Copy Requirement**:
+    - Ensure you have a local copy of the Dropbox `/GrantAlignTool/` folder on your computer.
+
+5. **Run the `summary.sh` script**:
+    - After all GitHub Actions runs are finished, run the `summary.sh` script locally.
+    - This script also requires a local copy of the Dropbox `/GrantAlignTool/` folder.
 
 ## Output
 - **Results**: Generated results files are uploaded to the Dropbox folder `/GrantAlignTool`.
