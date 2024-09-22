@@ -37,13 +37,13 @@ jobs:
         REPO_NAME: ${{ github.repository }}
       run: python main.py
 
-    - name: Wait for Dropbox to index files
-      run: sleep 60
+    # - name: Wait for Dropbox to index files
+    #   run: sleep 60
 
-    - name: Run summary.py
-      env:
-        DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
-        DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
-        DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
-        REPO_NAME: ${{ github.repository }}
-      run: python summary.py
+    # - name: Run summary.py
+    #  env:
+    #    DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+    #    DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+    #    DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
+    #    REPO_NAME: ${{ github.repository }}
+    #  run: python summary.py
