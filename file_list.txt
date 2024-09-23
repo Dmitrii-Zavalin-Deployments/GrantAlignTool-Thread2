@@ -1,2 +1,9 @@
+AIForEmployment
+AIforSketches
+AIForThermals
+FlyingBicycle
+MasteringStabilityHelicoptersDronesNature
 OceansPowerStations
+ReverseEngineeringOfExtraterrestrialTechnologies
 SnowPredictorProject
+TheTimeMachine
